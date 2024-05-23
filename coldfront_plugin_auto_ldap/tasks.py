@@ -3,6 +3,7 @@ from ldap3 import Server, Connection, TLS, get_config_parameter, set_config_para
 
 from coldfront.core.utils.common import import_from_settings
 from coldfront.core.allocation.models import Allocation, AllocationUser
+from coldfront.core.project.models import Project, ProjectAttribute
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,8 @@ LDAP_SASL_CREDENTIALS = import_from_settings("LDAP_USER_SEARCH_SASL_CREDENTIALS"
 LDAP_PRIV_KEY_FILE = import_from_settings("LDAP_USER_SEARCH_PRIV_KEY_FILE", None)
 LDAP_CERT_FILE = import_from_settings("LDAP_USER_SEARCH_CERT_FILE", None)
 LDAP_CACERT_FILE = import_from_settings("LDAP_USER_SEARCH_CACERT_FILE", None)
+
+ou = import_from_settings("AUTO_LDAP_COLDFRONT_OU")
 
 def connect():
     tls = None
@@ -36,11 +39,51 @@ def connect():
     conn = Connection(server, LDAP_BIND_DN, LDAP_BIND_PASSWORD, **conn_params)
     return conn
 
+def get_project(allocation_pk):
+    allocation = Allocation.objects.get(pk=allocation_pk)
+    return allocation.project.title
+
 def add_group(allocation_pk):
     conn = connect()
+    #search for group
+    search_base = 'cn=' + get_project(allocation_pk) # this probably needs fixing
+    search_scope = 'base'
+    search_filter = '(objectClass=*)'
+    try:
+        conn.search(search_base=search_base,
+                    search_filter=search_filter,
+                    search_scope=search_scope) # this probably needs fixing
+        results = connection.entries
+    except LDAPException as e:
+        resutls = e
+    
+    # some kind of check here to see if the group was found
+    if len(conn.entries) == 0:
+        try:
+            response = conn.add() #group properties need to be added
+        except LDAPException as e:
+            logger.warn(e)
+    
+    conn.unbind()
 
 def add_user(allocation_user_pk):
     conn = connect()
 
+    # check if user exists, create if they don't - maybe, might be able to just use existing users in ldap
+
+    # add user to project's group
+
+    conn.unbind()
+
 def remove_user(allocation_user_pk):
     conn = connect()
+
+    # sheck if user exists in group
+
+    # remove if they do
+
+    # check if user is in any groups
+
+    # remove user from ldap if they don't exist - maybe, might be able to just use existing users in ldap
+
+    conn.unbind()
