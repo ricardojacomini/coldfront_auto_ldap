@@ -1,0 +1,1 @@
+# coldfront_auto_ldap
