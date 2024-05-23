@@ -39,6 +39,17 @@ def connect():
     conn = Connection(server, LDAP_BIND_DN, LDAP_BIND_PASSWORD, **conn_params)
     return conn
 
+def parse_uri(uri):
+    if "://" in uri:
+        uri = uri.split("/")[2]
+    else:
+        uri = uri.split("/")[0]
+    partURI = uri.split(".")
+    parsed = ""
+    for part in partURI:
+        parsed += ',dc=' + part
+    return parsed
+
 def get_project(allocation_pk):
     allocation = Allocation.objects.get(pk=allocation_pk)
     return allocation.project.title
