@@ -1,5 +1,7 @@
 import logging
-from ldap3 import Server, Connection, TLS, get_config_parameter, set_config_parameter, SASL
+from ldap3 import Server, Connection, TLS, get_config_parameter, set_config_parameter, SASL, ALL
+
+from django.contrib.auth.models import User
 
 from coldfront.core.utils.common import import_from_settings
 from coldfront.core.allocation.models import Allocation, AllocationUser
@@ -56,8 +58,10 @@ def get_project(allocation_pk):
 
 def add_group(allocation_pk):
     conn = connect()
+    uri = parse_uri(LDAP_SERVER_URI)
+    project = get_project(allocation_pk)
     #search for group
-    search_base = 'cn=' + get_project(allocation_pk) # this probably needs fixing
+    search_base = 'cn=' + project + uri # this probably needs fixing
     search_scope = 'base'
     search_filter = '(objectClass=*)'
     try:
@@ -71,7 +75,7 @@ def add_group(allocation_pk):
     # some kind of check here to see if the group was found
     if len(conn.entries) == 0:
         try:
-            response = conn.add() #group properties need to be added
+            response = conn.add(project + uri) #this probably needs fixing
         except LDAPException as e:
             logger.warn(e)
     
@@ -79,8 +83,24 @@ def add_group(allocation_pk):
 
 def add_user(allocation_user_pk):
     conn = connect()
+    uri = parse_uri(LDAP_SERVER_URI)
+    user = AllocationUser.objects.get(pk=allocation_user_pk)
+    username = user.user.username
+    user_first = user.user.first_name
+    user_last = user.user.last_name
+    project = user.allocation.project.title
 
     # check if user exists, create if they don't - maybe, might be able to just use existing users in ldap
+    search_base = uri # this probably needs fixing
+    search_scope = SUBTREE
+    search_filter = '(uid=' + username + ')'
+    try:
+        conn.search(search_base=search_base,
+                    search_filter=search_filter,
+                    search_scope=search_scope)
+        results = connection.entries
+    except LDAPException as e:
+        results = e
 
     # add user to project's group
 
@@ -88,8 +108,24 @@ def add_user(allocation_user_pk):
 
 def remove_user(allocation_user_pk):
     conn = connect()
+    uri = parse_uri(LDAP_SERVER_URI)
+    user = AllocationUser.objects.get(pk=allocation_user_pk)
+    username = user.user.username
+    user_first = user.user.first_name
+    user_last = user.user.last_name
+    project = user.allocation.project.title
 
     # sheck if user exists in group
+    search_base = uri # this probably needs fixing
+    search_scope = SUBTREE
+    search_filter = '(uid=' + username + ')'
+    try:
+        conn.search(search_base=search_base,
+                    search_filter=search_filter,
+                    search_scope=search_scope)
+        results = connection.entries
+    except LDAPException as e:
+        results = e
 
     # remove if they do
 
