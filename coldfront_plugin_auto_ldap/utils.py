@@ -18,7 +18,20 @@ LDAP_PRIV_KEY_FILE = import_from_settings("LDAP_USER_SEARCH_PRIV_KEY_FILE", None
 LDAP_CERT_FILE = import_from_settings("LDAP_USER_SEARCH_CERT_FILE", None)
 LDAP_CACERT_FILE = import_from_settings("LDAP_USER_SEARCH_CACERT_FILE", None)
 
-def connect():
+def parse_uri(uri):
+    if "://" in uri:
+        uri = uri.split("/")[2]
+    else:
+        uri = uri.split("/")[0]
+    partURI = uri.split(".")
+    parsed = ""
+    for part in partURI:
+        parsed += ',dc=' + part
+    return parsed
+
+URI = parse_uri(LDAP_SERVER_URI)
+
+def connect(uri = URI):
     tls = None
     if LDAP_USE_TLS:
         tls = Tls(
@@ -35,18 +48,7 @@ def connect():
     conn = Connection(server, LDAP_BIND_DN, LDAP_BIND_PASSWORD, **conn_params)
     return conn
 
-def parse_uri(uri):
-    if "://" in uri:
-        uri = uri.split("/")[2]
-    else:
-        uri = uri.split("/")[0]
-    partURI = uri.split(".")
-    parsed = ""
-    for part in partURI:
-        parsed += ',dc=' + part
-    return parsed
-
-def search_project(conn, project):
+def search_project(conn, project, uri = URI):
     search_base = 'cn=' + project + uri # this probably needs fixing
     search_scope = 'base'
     search_filter = '(objectClass=*)'
@@ -58,13 +60,13 @@ def search_project(conn, project):
     except LDAPException as e:
         resutls = e
 
-def add_project(conn, project):
+def add_project(conn, project, uri = URI):
     try:
         response = conn.add('cn=' + project + ",ou=coldfront" + uri, ['groupOfNames', 'top']) #this probably needs fixing
     except LDAPException as e:
         logger.warn(e)
 
-def search_user(conn, username):
+def search_user(conn, username, uri = URI):
     search_base = uri # this probably needs fixing
     search_scope = SUBTREE
     search_filter = '(uid=' + username + ')'
@@ -76,14 +78,14 @@ def search_user(conn, username):
     except LDAPException as e:
         results = e
 
-def add_user(conn, username):
+def add_user(conn, username, uri = URI):
     try:
         response = conn.add('uid=' + username + ",ou=coldfront", + uri, ['inetOrgPerson', 'top']) #this probably needs fixing
     except LDAPException as e:
         logger.warn(e)
 
-def add_user_group(conn, username, group):
-    search_project(conn, project)
+def add_user_group(conn, username, group, uri = URI):
+    search_project(conn, project, uri)
 
     if len(conn.entries) != 0:
         try:
@@ -92,8 +94,8 @@ def add_user_group(conn, username, group):
             results = e
             return -1
 
-def remove_user_group(conn, username):
-    search_project(conn, project)
+def remove_user_group(conn, username, uri = URI):
+    search_project(conn, project, uri)
 
     if len(conn.entries) != 0:
         try:
