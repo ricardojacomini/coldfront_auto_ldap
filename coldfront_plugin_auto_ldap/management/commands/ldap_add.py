@@ -2,7 +2,7 @@ import logging
 
 from django.core.management.base import BaseCommand, CommandError
 
-from coldfront.core.project.models import Project, ProjectAttribute
+from coldfront.core.project.models import Project, ProjectAttribute, ProjectUser
 from coldfront.core.user.models import User, UserAtrribute
 
 from coldfront_plugin_auto_ldap.utils import (
@@ -73,11 +73,13 @@ class Command(BaseCommand):
                 if len(conn.entries) == 0:
                     break
                 add_project(conn, proj)
-            for u in users:
-                usr = u.user.username
-                search_user(conn, usr)
-                if len(conn.entries) == 0:
-                    break
-                add_user(conn, usr)
+                users = project.ProjectUser.all()
+                for u in users:
+                    username = u.user.username
+                    search_user(conn, username)
+                    if len(conn.entries) == 0:
+                        add_user(conn, username)
+                    add_user_group(conn, username, proj)
+                
 
         conn.unbind
