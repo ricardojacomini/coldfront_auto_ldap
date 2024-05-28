@@ -7,7 +7,7 @@ from coldfront.core.utils.common import import_from_settings
 from coldfront.core.allocation.models import Allocation, AllocationUser
 from coldfront.core.project.models import Project, ProjectAttribute
 
-from coldfront_plugin_auto_ldap.utils import connect
+from coldfront_plugin_auto_ldap.utils import connect, parse_uri
 
 logger = logging.getLogger(__name__)
 
