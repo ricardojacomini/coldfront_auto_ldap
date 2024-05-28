@@ -84,7 +84,7 @@ def add_user(conn, username, uri = URI):
     except LDAPException as e:
         logger.warn(e)
 
-def add_user_group(conn, username, group, uri = URI):
+def add_user_group(conn, username, project, uri = URI):
     search_project(conn, project, uri)
 
     if len(conn.entries) != 0:
@@ -94,7 +94,7 @@ def add_user_group(conn, username, group, uri = URI):
             results = e
             return -1
 
-def remove_user_group(conn, username, uri = URI):
+def remove_user_group(conn, username, project, uri = URI):
     search_project(conn, project, uri)
 
     if len(conn.entries) != 0:

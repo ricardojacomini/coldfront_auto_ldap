@@ -7,7 +7,16 @@ from coldfront.core.utils.common import import_from_settings
 from coldfront.core.allocation.models import Allocation, AllocationUser
 from coldfront.core.project.models import Project, ProjectAttribute
 
-from coldfront_plugin_auto_ldap.utils import connect, parse_uri
+from coldfront_plugin_auto_ldap.utils import (
+    connect,
+    parse_uri,
+    search_project,
+    add_project,
+    search_user,
+    add_user,
+    add_user_group,
+    remove_user_group
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,32 +41,17 @@ def get_project(allocation_pk):
 
 def add_group(allocation_pk):
     conn = connect()
-    uri = parse_uri(LDAP_SERVER_URI)
     project = get_project(allocation_pk)
     #search for group
-    search_base = 'cn=' + project + uri # this probably needs fixing
-    search_scope = 'base'
-    search_filter = '(objectClass=*)'
-    try:
-        conn.search(search_base=search_base,
-                    search_filter=search_filter,
-                    search_scope=search_scope) # this probably needs fixing
-        results = connection.entries
-    except LDAPException as e:
-        resutls = e
+    search_project(conn, project)
     
     # some kind of check here to see if the group was found
-    if len(conn.entries) == 0:
-        try:
-            response = conn.add('cn=' + project + ",ou=coldfront" + uri, ['groupOfNames', 'top']) #this probably needs fixing
-        except LDAPException as e:
-            logger.warn(e)
+    add_project(conn, project)
     
     conn.unbind()
 
 def add_user(allocation_user_pk):
     conn = connect()
-    uri = parse_uri(LDAP_SERVER_URI)
     user = AllocationUser.objects.get(pk=allocation_user_pk)
     username = user.user.username
     user_first = user.user.first_name
@@ -65,45 +59,18 @@ def add_user(allocation_user_pk):
     project = user.allocation.project.title
 
     # check if user exists, create if they don't - maybe, might be able to just use existing users in ldap
-    search_base = uri # this probably needs fixing
-    search_scope = SUBTREE
-    search_filter = '(uid=' + username + ')'
-    try:
-        conn.search(search_base=search_base,
-                    search_filter=search_filter,
-                    search_scope=search_scope)
-        results = connection.entries
-    except LDAPException as e:
-        results = e
+    search_user(conn, username)
 
     if len(conn.entries) == 0:
-        try:
-            response = conn.add('uid=' + username + ",ou=coldfront", + uri, ['inetOrgPerson', 'top']) #this probably needs fixing
-        except LDAPException as e:
-            logger.warn(e)
-            conn.unbind()
-            return
+        add_user(conn, username)
 
     # add user to project's group
-    search_base = 'cn=' + project + uri # this probably needs fixing
-    search_scope = 'base'
-    search_filter = '(objectClass=*)'
-    try:
-        conn.search(search_base=search_base,
-                    search_filter=search_filter,
-                    search_scope=search_scope) # this probably needs fixing
-        results = connection.entries
-    except LDAPException as e:
-        resutls = e
-
-    if len(conn.entries) != 0:
-        conn.modify('cn=' + project + ",ou=coldfront" + uri, {'member': [(MODIFY_ADD, ['uid=' + username + ",ou=coldfront"])]}) #this probably needs fixing
+    add_user_group(conn, usernmae, project)
 
     conn.unbind()
 
 def remove_user(allocation_user_pk):
     conn = connect()
-    uri = parse_uri(LDAP_SERVER_URI)
     user = AllocationUser.objects.get(pk=allocation_user_pk)
     username = user.user.username
     user_first = user.user.first_name
@@ -111,30 +78,13 @@ def remove_user(allocation_user_pk):
     project = user.allocation.project.title
 
     # sheck if user exists
-    search_base = uri # this probably needs fixing
-    search_scope = SUBTREE
-    search_filter = '(uid=' + username + ')'
-    try:
-        conn.search(search_base=search_base,
-                    search_filter=search_filter,
-                    search_scope=search_scope)
-        results = connection.entries
-    except LDAPException as e:
-        results = e
+    search_user(conn, username)
+
+    if len(conn.entries) == 0:
+        conn.unbind()
+        return
 
     # remove if they do
-    search_base = 'cn=' + project + uri # this probably needs fixing
-    search_scope = 'base'
-    search_filter = '(objectClass=*)'
-    try:
-        conn.search(search_base=search_base,
-                    search_filter=search_filter,
-                    search_scope=search_scope) # this probably needs fixing
-        results = connection.entries
-    except LDAPException as e:
-        resutls = e
-
-    if len(conn.entries) != 0:
-        conn.modify('cn=' + project + ",ou=coldfront" + uri, {'member': [(MODIFY_DELETE, ['uid=' + username + ",ou=coldfront"])]}) #this probably needs fixing
+    remove_user_group(conn, username, project)
         
     conn.unbind()

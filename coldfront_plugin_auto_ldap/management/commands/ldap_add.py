@@ -5,7 +5,16 @@ from django.core.management.base import BaseCommand, CommandError
 from coldfront.core.project.models import Project, ProjectAttribute
 from coldfront.core.user.models import User, UserAtrribute
 
-from coldfront_plugin_auto_ldap.tasks import add_group, add_user
+from coldfront_plugin_auto_ldap.utils import (
+    connect,
+    parse_uri,
+    search_project,
+    add_project,
+    search_user,
+    add_user,
+    add_user_group,
+    remove_user_group
+)
 
 logger = logging.getLogger(__name__)
 
