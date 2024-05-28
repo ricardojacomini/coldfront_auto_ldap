@@ -23,6 +23,12 @@ class Command(BaseCommand):
             "--project",
             help="Add a project, or specify project when used with -u"
         )
+        parser.add_argument(
+            "-r",
+            "--remove",
+            action="store_true",
+            help="Use with -r and -p to remove a user from a project"
+        )
 
     def handle(self, *args, **options):
         projects = Allocation.objects.all()
@@ -33,7 +39,10 @@ class Command(BaseCommand):
 
         if user != None:
             if project != None:
-                pass
+                if options["remove"]:
+                    pass
+                else:
+                    pass
             pass
         elif project:
             pass
