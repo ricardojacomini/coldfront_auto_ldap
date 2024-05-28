@@ -136,7 +136,7 @@ def remove_user(allocation_user_pk):
     user_last = user.user.last_name
     project = user.allocation.project.title
 
-    # sheck if user exists in group
+    # sheck if user exists
     search_base = uri # this probably needs fixing
     search_scope = SUBTREE
     search_filter = '(uid=' + username + ')'
@@ -149,9 +149,18 @@ def remove_user(allocation_user_pk):
         results = e
 
     # remove if they do
+    search_base = 'cn=' + project + uri # this probably needs fixing
+    search_scope = 'base'
+    search_filter = '(objectClass=*)'
+    try:
+        conn.search(search_base=search_base,
+                    search_filter=search_filter,
+                    search_scope=search_scope) # this probably needs fixing
+        results = connection.entries
+    except LDAPException as e:
+        resutls = e
 
-    # check if user is in any groups
-
-    # remove user from ldap if they don't exist - maybe, might be able to just use existing users in ldap
-
+    if len(conn.entries) != 0:
+        conn.modify('cn=' + project + ",ou=coldfront" + uri, {'member': [(MODIFY_DELETE, ['uid=' + username + ",ou=coldfront"])]}) #this probably needs fixing
+        
     conn.unbind()
