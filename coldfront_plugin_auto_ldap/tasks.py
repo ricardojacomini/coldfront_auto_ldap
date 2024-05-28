@@ -7,6 +7,8 @@ from coldfront.core.utils.common import import_from_settings
 from coldfront.core.allocation.models import Allocation, AllocationUser
 from coldfront.core.project.models import Project, ProjectAttribute
 
+from coldfront_plugin_auto_ldap.utils import connect
+
 logger = logging.getLogger(__name__)
 
 LDAP_SERVER_URI = import_from_settings("LDAP_USER_SEARCH_SERVER_URI")
@@ -23,23 +25,6 @@ LDAP_CERT_FILE = import_from_settings("LDAP_USER_SEARCH_CERT_FILE", None)
 LDAP_CACERT_FILE = import_from_settings("LDAP_USER_SEARCH_CACERT_FILE", None)
 
 ou = import_from_settings("AUTO_LDAP_COLDFRONT_OU")
-
-def connect():
-    tls = None
-    if LDAP_USE_TLS:
-        tls = Tls(
-            local_private_key_file=LDAP_PRIV_KEY_FILE,
-            local_certificate_file=LDAP_CERT_FILE,
-            ca_certs_file=LDAP_CACERT_FILE,
-        )
-    server = Server(LDAP_SERVER_URI, use_ssl=LDAP_USE_SSL, connect_timeout=LDAP_CONNECT_TIMEOUT, tls=tls)
-    conn_params = {"auto_bind": True}
-    if LDAP_SASL_MECHANISM:
-        conn_params["sasl_mechanism"] = LDAP_SASL_MECHANISM
-        conn_params["sasl_credentials"] = LDAP_SASL_CREDENTIALS
-        conn_params["authentication"] = SASL
-    conn = Connection(server, LDAP_BIND_DN, LDAP_BIND_PASSWORD, **conn_params)
-    return conn
 
 def parse_uri(uri):
     if "://" in uri:
