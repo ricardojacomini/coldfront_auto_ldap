@@ -35,10 +35,12 @@ LDAP_CACERT_FILE = import_from_settings("LDAP_USER_SEARCH_CACERT_FILE", None)
 
 ou = import_from_settings("AUTO_LDAP_COLDFRONT_OU")
 
+# gets the project title from an allocation_pk
 def get_project(allocation_pk):
     allocation = Allocation.objects.get(pk=allocation_pk)
     return allocation.project.title
 
+# creates a new project
 def add_group(allocation_pk):
     conn = connect()
     project = get_project(allocation_pk)
@@ -50,6 +52,7 @@ def add_group(allocation_pk):
     
     conn.unbind()
 
+# creates user if it doesn't already exist and adds them to a project
 def add_user(allocation_user_pk):
     conn = connect()
     user = AllocationUser.objects.get(pk=allocation_user_pk)
@@ -69,6 +72,7 @@ def add_user(allocation_user_pk):
 
     conn.unbind()
 
+# removes a user from a project
 def remove_user(allocation_user_pk):
     conn = connect()
     user = AllocationUser.objects.get(pk=allocation_user_pk)
