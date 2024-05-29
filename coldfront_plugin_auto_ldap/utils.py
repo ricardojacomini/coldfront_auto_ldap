@@ -49,9 +49,9 @@ def connect(uri = URI):
     return conn
 
 def search_project(conn, project, uri = URI):
-    search_base = 'cn=' + project + uri # this probably needs fixing
-    search_scope = 'base'
-    search_filter = '(objectClass=*)'
+    search_base = 'ou=coldfront' + uri # this probably needs fixing
+    search_scope = LEVEL
+    search_filter = '(cn=' + project + ')'
     try:
         conn.search(search_base=search_base,
                     search_filter=search_filter,
@@ -67,7 +67,19 @@ def add_project(conn, project, uri = URI):
         logger.warn(e)
 
 def search_user(conn, username, uri = URI):
-    search_base = uri # this probably needs fixing
+    search_base = 'ou=coldfront' + uri # this probably needs fixing
+    search_scope = SUBTREE
+    search_filter = '(uid=' + username + ')'
+    try:
+        conn.search(search_base=search_base,
+                    search_filter=search_filter,
+                    search_scope=search_scope)
+        results = connection.entries
+    except LDAPException as e:
+        results = e
+
+def search_user_group(conn, username, project, uri = URI):
+    search_base = 'cn=' + project + ',ou=coldfront' + uri # this probably needs fixing
     search_scope = SUBTREE
     search_filter = '(uid=' + username + ')'
     try:

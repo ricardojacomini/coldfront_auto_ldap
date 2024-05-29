@@ -19,7 +19,7 @@ from coldfront_plugin_auto_ldap.utils import (
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
-    help = "Adds users or projects to LDAP"
+    help = "Adds users or projects to LDAP. Adds all users and projects in Coldfront if no options specified"
 
     def add_arguments(self, parser):
         parser.add_argument(
