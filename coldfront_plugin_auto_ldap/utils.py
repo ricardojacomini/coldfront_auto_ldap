@@ -18,14 +18,18 @@ LDAP_PRIV_KEY_FILE = import_from_settings("LDAP_USER_SEARCH_PRIV_KEY_FILE", None
 LDAP_CERT_FILE = import_from_settings("LDAP_USER_SEARCH_CERT_FILE", None)
 LDAP_CACERT_FILE = import_from_settings("LDAP_USER_SEARCH_CACERT_FILE", None)
 
-# parse a given uri into a format usable in LDAP operations
-def parse_uri(uri):
+OU = import_from_settings("AUTO_LDAP_COLDFRONT_OU")
+
+# parse a given uri with OU into a format usable in LDAP operations
+def parse_uri(uri, ou = OU):
     if "://" in uri:
         uri = uri.split("/")[2]
     else:
         uri = uri.split("/")[0]
     partURI = uri.split(".")
-    parsed = ""
+    if ou == None or ou == "":
+        ou = 'COLDFRONT'
+    parsed = 'ou=' + ou
     for part in partURI:
         parsed += ',dc=' + part
     return parsed
@@ -53,7 +57,7 @@ def connect(uri = URI):
 
 # searches for a given ldap group in the Coldfront OU
 def search_project(conn, project, uri = URI):
-    search_base = 'ou=coldfront' + uri # this probably needs fixing
+    search_base = uri # this probably needs fixing
     search_scope = LEVEL
     search_filter = '(cn=' + project + ')'
     try:
@@ -67,13 +71,13 @@ def search_project(conn, project, uri = URI):
 # adds an ldap group to the Coldfront OU
 def add_project(conn, project, uri = URI):
     try:
-        response = conn.add('cn=' + project + ",ou=coldfront" + uri, ['groupOfNames', 'top']) #this probably needs fixing
+        response = conn.add('cn=' + project + ',' + uri, ['groupOfNames', 'top']) #this probably needs fixing
     except LDAPException as e:
         logger.warn(e)
 
 # searches for a given user by UID in the Coldfront OU
 def search_user(conn, username, uri = URI):
-    search_base = 'ou=coldfront' + uri # this probably needs fixing
+    search_base = uri # this probably needs fixing
     search_scope = SUBTREE
     search_filter = '(uid=' + username + ')'
     try:
@@ -86,7 +90,7 @@ def search_user(conn, username, uri = URI):
 
 # searches for a given user by UID in a given group in the Coldfront OUT
 def search_user_group(conn, username, project, uri = URI):
-    search_base = 'cn=' + project + ',ou=coldfront' + uri # this probably needs fixing
+    search_base = 'cn=' + project + ',' + uri # this probably needs fixing
     search_scope = SUBTREE
     search_filter = '(uid=' + username + ')'
     try:
@@ -100,7 +104,7 @@ def search_user_group(conn, username, project, uri = URI):
 # creates a new user in the Coldfront OU
 def add_user(conn, username, uri = URI):
     try:
-        response = conn.add('uid=' + username + ",ou=coldfront", + uri, ['inetOrgPerson', 'top']) #this probably needs fixing
+        response = conn.add('uid=' + username + ',' + uri, ['inetOrgPerson', 'top']) #this probably needs fixing
     except LDAPException as e:
         logger.warn(e)
 
@@ -110,7 +114,7 @@ def add_user_group(conn, username, project, uri = URI):
 
     if len(conn.entries) != 0:
         try:
-            conn.modify('cn=' + project + ",ou=coldfront" + uri, {'member': [(MODIFY_ADD, ['uid=' + username + ",ou=coldfront"])]}) #this probably needs fixing
+            conn.modify('cn=' + project + ',' + uri, {'member': [(MODIFY_ADD, ['uid=' + username + ",ou=coldfront"])]}) #this probably needs fixing
         except LDAPException as e:
             results = e
             return -1
@@ -121,7 +125,7 @@ def remove_user_group(conn, username, project, uri = URI):
 
     if len(conn.entries) != 0:
         try:
-            conn.modify('cn=' + project + ",ou=coldfront" + uri, {'member': [(MODIFY_DELETE, ['uid=' + username + ",ou=coldfront"])]}) #this probably needs fixing
+            conn.modify('cn=' + project + ',' + uri, {'member': [(MODIFY_DELETE, ['uid=' + username + ",ou=coldfront"])]}) #this probably needs fixing
         except LDAPException as e:
             results = e
             return -1

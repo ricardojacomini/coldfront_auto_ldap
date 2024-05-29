@@ -3,7 +3,6 @@ from ldap3 import Server, Connection, TLS, get_config_parameter, set_config_para
 
 from django.contrib.auth.models import User
 
-from coldfront.core.utils.common import import_from_settings
 from coldfront.core.allocation.models import Allocation, AllocationUser
 from coldfront.core.project.models import Project, ProjectAttribute
 
@@ -19,21 +18,6 @@ from coldfront_plugin_auto_ldap.utils import (
 )
 
 logger = logging.getLogger(__name__)
-
-LDAP_SERVER_URI = import_from_settings("LDAP_USER_SEARCH_SERVER_URI")
-LDAP_USER_SEARCH_BASE = import_from_settings("LDAP_USER_SEARCH_BASE")
-LDAP_BIND_DN = import_from_settings("LDAP_USER_SEARCH_BIND_DN", None)
-LDAP_BIND_PASSWORD = import_from_settings("LDAP_USER_SEARCH_BIND_PASSWORD", None)
-LDAP_CONNECT_TIMEOUT = import_from_settings("LDAP_USER_SEARCH_CONNECT_TIMEOUT", 2.5)
-LDAP_USE_SSL = import_from_settings("LDAP_USER_SEARCH_USE_SSL", True)
-LDAP_USE_TLS = import_from_settings("LDAP_USER_SEARCH_USE_TLS", False)
-LDAP_SASL_MECHANISM = import_from_settings("LDAP_USER_SEARCH_SASL_MECHANISM", None)
-LDAP_SASL_CREDENTIALS = import_from_settings("LDAP_USER_SEARCH_SASL_CREDENTIALS", None)
-LDAP_PRIV_KEY_FILE = import_from_settings("LDAP_USER_SEARCH_PRIV_KEY_FILE", None)
-LDAP_CERT_FILE = import_from_settings("LDAP_USER_SEARCH_CERT_FILE", None)
-LDAP_CACERT_FILE = import_from_settings("LDAP_USER_SEARCH_CACERT_FILE", None)
-
-ou = import_from_settings("AUTO_LDAP_COLDFRONT_OU")
 
 # gets the project title from an allocation_pk
 def get_project(allocation_pk):
