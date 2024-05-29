@@ -57,13 +57,13 @@ def connect(uri = URI):
 
 # searches for a given ldap group in the Coldfront OU
 def search_project(conn, project, uri = URI):
-    search_base = uri # this probably needs fixing
+    search_base = 'ou=projects,' + uri
     search_scope = LEVEL
     search_filter = '(cn=' + project + ')'
     try:
         conn.search(search_base=search_base,
                     search_filter=search_filter,
-                    search_scope=search_scope) # this probably needs fixing
+                    search_scope=search_scope)
         results = connection.entries
     except LDAPException as e:
         resutls = e
@@ -71,13 +71,13 @@ def search_project(conn, project, uri = URI):
 # adds an ldap group to the Coldfront OU
 def add_project(conn, project, uri = URI):
     try:
-        response = conn.add('cn=' + project + ',' + uri, ['groupOfNames', 'top']) #this probably needs fixing
+        response = conn.add('cn=' + project + ',ou=projects,' + uri, ['groupOfNames', 'top']) #this probably needs fixing
     except LDAPException as e:
         logger.warn(e)
 
 # searches for a given user by UID in the Coldfront OU
 def search_user(conn, username, uri = URI):
-    search_base = uri # this probably needs fixing
+    search_base = 'ou=users,' + uri
     search_scope = SUBTREE
     search_filter = '(uid=' + username + ')'
     try:
@@ -90,7 +90,7 @@ def search_user(conn, username, uri = URI):
 
 # searches for a given user by UID in a given group in the Coldfront OUT
 def search_user_group(conn, username, project, uri = URI):
-    search_base = 'cn=' + project + ',' + uri # this probably needs fixing
+    search_base = 'cn=' + project + ',ou=projects,' + uri
     search_scope = SUBTREE
     search_filter = '(uid=' + username + ')'
     try:
@@ -104,7 +104,7 @@ def search_user_group(conn, username, project, uri = URI):
 # creates a new user in the Coldfront OU
 def add_user(conn, username, uri = URI):
     try:
-        response = conn.add('uid=' + username + ',' + uri, ['inetOrgPerson', 'top']) #this probably needs fixing
+        response = conn.add('uid=' + username + ',ou=users,' + uri, ['inetOrgPerson', 'top'])
     except LDAPException as e:
         logger.warn(e)
 
@@ -114,7 +114,7 @@ def add_user_group(conn, username, project, uri = URI):
 
     if len(conn.entries) != 0:
         try:
-            conn.modify('cn=' + project + ',' + uri, {'member': [(MODIFY_ADD, ['uid=' + username + ",ou=coldfront"])]}) #this probably needs fixing
+            conn.modify('cn=' + project + ',ou=projects' + uri, {'member': [(MODIFY_ADD, ['uid=' + username])]})
         except LDAPException as e:
             results = e
             return -1
@@ -125,7 +125,7 @@ def remove_user_group(conn, username, project, uri = URI):
 
     if len(conn.entries) != 0:
         try:
-            conn.modify('cn=' + project + ',' + uri, {'member': [(MODIFY_DELETE, ['uid=' + username + ",ou=coldfront"])]}) #this probably needs fixing
+            conn.modify('cn=' + project + ',ou=projects' + uri, {'member': [(MODIFY_DELETE, ['uid=' + username])]})
         except LDAPException as e:
             results = e
             return -1

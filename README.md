@@ -9,4 +9,6 @@ pip install git+https://github.com/Ponyssimo/coldfront_auto_ldap.git
 Add the following to ColdFront's [local settings](https://coldfront.readthedocs.io/en/latest/config/#configuration-files):
 ```
 INSTALLED_APPS += ["coldfront_plugin_auto_ldap"]
+AUTO_LDAP_COLDFRONT_OU = Coldfront OU
 ```
+The Coldfront OU is the LDAP OU this plugin will use. If not set, it will default to "COLDFRONT"
