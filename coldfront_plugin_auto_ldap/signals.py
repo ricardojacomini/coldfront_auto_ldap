@@ -1,11 +1,8 @@
-import logging
 from django.dispatch import receiver
 from django_q.tasks import async_task
 
 from coldfront.core.allocation.signals import allocation_activate, allocation_activate_user, allocation_remove_user
 from coldfront.core.project.views import ProjectAddUsersView, ProjectRemoveUsersView
-
-logger = logging.getLogger(__name__)
 
 @receiver(allocation_activate)
 def add_group(sender, **kwargs):

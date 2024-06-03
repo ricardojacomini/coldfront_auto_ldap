@@ -32,7 +32,10 @@ def add_group(allocation_pk):
     search_project(conn, project)
     
     # some kind of check here to see if the group was found
-    add_project(conn, project)
+    if len(conn.entries) != 0:
+        add_project(conn, project)
+    else:
+        logger.warn("Project %s not found", project.title)
     
     conn.unbind()
 
@@ -49,10 +52,11 @@ def add_user(allocation_user_pk):
     search_user(conn, username)
 
     if len(conn.entries) == 0:
+        logger.info("User %s does not exist, creating user", username)
         add_user(conn, username)
 
     # add user to project's group
-    add_user_group(conn, usernmae, project)
+    add_user_group(conn, username, project)
 
     conn.unbind()
 
@@ -69,10 +73,8 @@ def remove_user(allocation_user_pk):
     search_user(conn, username)
 
     if len(conn.entries) == 0:
-        conn.unbind()
-        return
-
-    # remove if they do
-    remove_user_group(conn, username, project)
+        logger.info("User %s does not exist", username)
+    else:
+        remove_user_group(conn, username, project)
         
     conn.unbind()
