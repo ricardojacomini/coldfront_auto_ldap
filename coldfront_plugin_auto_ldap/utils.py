@@ -36,7 +36,6 @@ def parse_uri(uri, ou = OU):
 
 URI = parse_uri(LDAP_SERVER_URI)
 
-
 # connects to an ldap server based on parameters in Coldfront settings
 def connect(uri = URI):
     tls = None
@@ -64,14 +63,13 @@ def search_project(conn, project, uri = URI):
         conn.search(search_base=search_base,
                     search_filter=search_filter,
                     search_scope=search_scope)
-        results = connection.entries
     except LDAPException as e:
-        resutls = e
+        logger.warn(e)
 
 # adds an ldap group to the Coldfront OU
 def add_project(conn, project, uri = URI):
     try:
-        response = conn.add('cn=' + project + ',ou=projects,' + uri, ['groupOfNames', 'top']) #this probably needs fixing
+        response = conn.add('cn=' + project + ',ou=projects,' + uri, ['groupOfNames', 'top'])
     except LDAPException as e:
         logger.warn(e)
 
@@ -84,11 +82,10 @@ def search_user(conn, username, uri = URI):
         conn.search(search_base=search_base,
                     search_filter=search_filter,
                     search_scope=search_scope)
-        results = connection.entries
     except LDAPException as e:
-        results = e
+        logger.warn(e)
 
-# searches for a given user by UID in a given group in the Coldfront OUT
+# searches for a given user by UID in a given group in the Coldfront OU
 def search_user_group(conn, username, project, uri = URI):
     search_base = 'cn=' + project + ',ou=projects,' + uri
     search_scope = SUBTREE
@@ -97,9 +94,8 @@ def search_user_group(conn, username, project, uri = URI):
         conn.search(search_base=search_base,
                     search_filter=search_filter,
                     search_scope=search_scope)
-        results = connection.entries
     except LDAPException as e:
-        results = e
+        logger.warn(e)
 
 # creates a new user in the Coldfront OU
 def add_user(conn, username, uri = URI):
@@ -116,7 +112,7 @@ def add_user_group(conn, username, project, uri = URI):
         try:
             conn.modify('cn=' + project + ',ou=projects' + uri, {'member': [(MODIFY_ADD, ['uid=' + username])]})
         except LDAPException as e:
-            results = e
+            logger.warn(e)
             return -1
 
 # removes a given user from a given group in the Coldfront OU
@@ -127,5 +123,5 @@ def remove_user_group(conn, username, project, uri = URI):
         try:
             conn.modify('cn=' + project + ',ou=projects' + uri, {'member': [(MODIFY_DELETE, ['uid=' + username])]})
         except LDAPException as e:
-            results = e
+            logger.warn(e)
             return -1
