@@ -21,9 +21,11 @@ LDAP_CACERT_FILE = import_from_settings("LDAP_USER_SEARCH_CACERT_FILE", None)
 OU = import_from_settings("AUTO_LDAP_COLDFRONT_OU")
 MOCK = import_from_settings("AUTO_LDAP_MOCK") #whether to use a mock server
 MOCK_FILE = import_from_settings("AUTOLDAP_MOCK_FILE") #json file with mock server schema
+URI = parse_uri()
 
 # parse a given uri with OU into a format usable in LDAP operations
-def parse_uri(uri, ou = OU):
+def parse_uri(uri=LDAP_SERVER_URI, ou = OU, shortened=False):
+    parsed = ""
     if "://" in uri:
         uri = uri.split("/")[2]
     else:
@@ -31,12 +33,13 @@ def parse_uri(uri, ou = OU):
     partURI = uri.split(".")
     if ou == None or ou == "":
         ou = 'COLDFRONT'
-    parsed = 'ou=' + ou
+    if not shortened:
+        parsed = 'ou=' + ou
     for part in partURI:
         parsed += ',dc=' + part
+    if shortened:
+        parsed = parsed[1:]
     return parsed
-
-URI = parse_uri(LDAP_SERVER_URI)
 
 # connects to an ldap server based on parameters in Coldfront settings
 def connect(uri = URI):
@@ -91,9 +94,10 @@ def search_project(conn, project, uri = URI):
         logger.warn(e)
 
 # adds an ldap group to the Coldfront OU
-def add_project(conn, project, uri = URI):
+def add_project(conn, project, pi, pi_cn, pi_sn, uri = URI):
+    add_user(conn, pi, pi_cn, pi_sn)
     try:
-        response = conn.add('cn=' + project + ',ou=projects,' + uri, ['groupOfNames', 'top'])
+        response = conn.add('cn=' + project + ',ou=projects,' + uri, 'groupOfNames', {'cn': project, 'member': 'uid=' + pi + ',ou=users,' + uri})
     except LDAPException as e:
         logger.warn(e)
 
@@ -122,9 +126,9 @@ def search_user_group(conn, username, project, uri = URI):
         logger.warn(e)
 
 # creates a new user in the Coldfront OU
-def add_user(conn, username, uri = URI):
+def add_user(conn, username, cn, sn, uri = URI):
     try:
-        response = conn.add('uid=' + username + ',ou=users,' + uri, ['inetOrgPerson', 'top'])
+        response = conn.add('uid=' + username + ',ou=users,' + uri, 'inetOrgPerson', {'cn': cn, 'sn': sn})
     except LDAPException as e:
         logger.warn(e)
 
@@ -134,7 +138,7 @@ def add_user_group(conn, username, project, uri = URI):
 
     if len(conn.entries) != 0:
         try:
-            conn.modify('cn=' + project + ',ou=projects' + uri, {'member': [(MODIFY_ADD, ['uid=' + username])]})
+            conn.modify('cn=' + project + ',ou=projects' + uri, {'member': [(MODIFY_ADD, ['uid=' + username + ',ou=users,' + uri])]})
         except LDAPException as e:
             logger.warn(e)
             return -1

@@ -29,12 +29,15 @@ def get_project(allocation_pk):
 def add_group(allocation_pk):
     conn = connect()
     project = get_project(allocation_pk)
+    pi = project.pi.user.username
+    pi_cn = project.pi.user.first_name
+    pi_sn = project.pi.user.last_name
     #search for group
     search_project(conn, project)
     
     # some kind of check here to see if the group was found
     if len(conn.entries) != 0:
-        add_project(conn, project)
+        add_project(conn, project, pi, pi_cn, pi_sn)
     else:
         logger.warn("Project %s not found", project.title)
     
@@ -54,7 +57,7 @@ def add_user(allocation_user_pk):
 
     if len(conn.entries) == 0:
         logger.info("User %s does not exist, creating user", username)
-        add_user(conn, username)
+        add_user(conn, username, user_first, user_last)
 
     # add user to project's group
     add_user_group(conn, username, project)
