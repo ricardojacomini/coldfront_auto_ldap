@@ -67,10 +67,11 @@ def connect(uri = URI):
         if conn.search('ou=*', '(objectclass=*)', attributes=ALL_ATTRIBUTES):
             conn.response_to_file(MOCK_FILE, raw=True)
         connection.strategy.entries_from_json(MOCK_FILE)
+        conn.unbind()
         return connection
     return conn
 
-# writes current DIT to file if MOCK is set to true
+# writes current DIT to file if MOCK is set to true, then unbinds from the connection
 def disconnect(conn):
     if MOCK:
         if conn.search('ou=*', '(objectclass=*)', attributes=ALL_ATTRIBUTES):
