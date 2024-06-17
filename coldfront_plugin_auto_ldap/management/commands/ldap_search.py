@@ -7,6 +7,7 @@ from coldfront.core.user.models import User, UserAtrribute
 
 from coldfront_plugin_auto_ldap.utils import (
     connect,
+    disconnect,
     parse_uri,
     search_project,
     add_project,
@@ -52,4 +53,4 @@ class Command(BaseCommand):
         else:
             search_project(conn, project)
 
-        conn.unbind()
+        disconnect(conn)

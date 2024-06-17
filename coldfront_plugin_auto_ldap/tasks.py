@@ -8,6 +8,7 @@ from coldfront.core.project.models import Project, ProjectAttribute
 
 from coldfront_plugin_auto_ldap.utils import (
     connect,
+    disconnect,
     parse_uri,
     search_project,
     add_project,
@@ -37,7 +38,7 @@ def add_group(allocation_pk):
     else:
         logger.warn("Project %s not found", project.title)
     
-    conn.unbind()
+    disconnect(conn)
 
 # creates user if it doesn't already exist and adds them to a project
 def add_user(allocation_user_pk):
@@ -58,7 +59,7 @@ def add_user(allocation_user_pk):
     # add user to project's group
     add_user_group(conn, username, project)
 
-    conn.unbind()
+    disconnect(conn)
 
 # removes a user from a project
 def remove_user(allocation_user_pk):
@@ -77,4 +78,4 @@ def remove_user(allocation_user_pk):
     else:
         remove_user_group(conn, username, project)
         
-    conn.unbind()
+    disconnect(conn)

@@ -1,5 +1,5 @@
 import logging
-from ldap3 import Server, Connection, TLS, get_config_parameter, set_config_parameter, SASL, ALL
+from ldap3 import Server, Connection, TLS, get_config_parameter, set_config_parameter, SASL, ALL, MOCK_ASYNC
 
 from coldfront.core.utils.common import import_from_settings
 
@@ -19,6 +19,8 @@ LDAP_CERT_FILE = import_from_settings("LDAP_USER_SEARCH_CERT_FILE", None)
 LDAP_CACERT_FILE = import_from_settings("LDAP_USER_SEARCH_CACERT_FILE", None)
 
 OU = import_from_settings("AUTO_LDAP_COLDFRONT_OU")
+MOCK = import_from_settings("AUTO_LDAP_MOCK") #whether to use a mock server
+MOCK_FILE = import_from_settings("AUTOLDAP_MOCK_FILE") #json file with mock server schema
 
 # parse a given uri with OU into a format usable in LDAP operations
 def parse_uri(uri, ou = OU):
@@ -38,6 +40,15 @@ URI = parse_uri(LDAP_SERVER_URI)
 
 # connects to an ldap server based on parameters in Coldfront settings
 def connect(uri = URI):
+    if MOCK:
+        server = Server('mock server')
+        connection = Connection(server, user='cn=my_user,ou=test,o=lab', password='my_password', client_strategy=MOCK_ASYNC)
+        try:
+            connection.strategy.entries_from_json(MOCK_FILE)
+        except:
+            pass
+        else:
+            return connection
     tls = None
     if LDAP_USE_TLS:
         tls = Tls(
@@ -52,7 +63,19 @@ def connect(uri = URI):
         conn_params["sasl_credentials"] = LDAP_SASL_CREDENTIALS
         conn_params["authentication"] = SASL
     conn = Connection(server, LDAP_BIND_DN, LDAP_BIND_PASSWORD, **conn_params)
+    if MOCK:
+        if conn.search('ou=*', '(objectclass=*)', attributes=ALL_ATTRIBUTES):
+            conn.response_to_file(MOCK_FILE, raw=True)
+        connection.strategy.entries_from_json(MOCK_FILE)
+        return connection
     return conn
+
+# writes current DIT to file if MOCK is set to true
+def disconnect(conn):
+    if MOCK:
+        if conn.search('ou=*', '(objectclass=*)', attributes=ALL_ATTRIBUTES):
+            conn.response_to_file(MOCK_FILE, raw=True)
+    conn.unbind
 
 # searches for a given ldap group in the Coldfront OU
 def search_project(conn, project, uri = URI):

@@ -7,6 +7,7 @@ from coldfront.core.user.models import User, UserAtrribute
 
 from coldfront_plugin_auto_ldap.utils import (
     connect,
+    disconnect,
     parse_uri,
     search_project,
     add_project,
@@ -82,4 +83,4 @@ class Command(BaseCommand):
                     add_user_group(conn, username, proj)
                 
 
-        conn.unbind
+        disconnect(conn)
