@@ -1,5 +1,6 @@
 import logging
-from ldap3 import Server, Connection, TLS, get_config_parameter, set_config_parameter, SASL, ALL, MOCK_ASYNC
+import os
+from ldap3 import Server, Connection, Tls, get_config_parameter, set_config_parameter, SASL, ALL, MOCK_ASYNC, ALL_ATTRIBUTES
 
 from coldfront.core.utils.common import import_from_settings
 
@@ -21,7 +22,6 @@ LDAP_CACERT_FILE = import_from_settings("LDAP_USER_SEARCH_CACERT_FILE", None)
 OU = import_from_settings("AUTO_LDAP_COLDFRONT_OU")
 MOCK = import_from_settings("AUTO_LDAP_MOCK") #whether to use a mock server
 MOCK_FILE = import_from_settings("AUTOLDAP_MOCK_FILE") #json file with mock server schema
-URI = parse_uri()
 
 # parse a given uri with OU into a format usable in LDAP operations
 def parse_uri(uri=LDAP_SERVER_URI, ou = OU, shortened=False):
@@ -40,6 +40,8 @@ def parse_uri(uri=LDAP_SERVER_URI, ou = OU, shortened=False):
     if shortened:
         parsed = parsed[1:]
     return parsed
+
+URI = parse_uri()
 
 # connects to an ldap server based on parameters in Coldfront settings
 def connect(uri = URI):
@@ -67,6 +69,8 @@ def connect(uri = URI):
         conn_params["authentication"] = SASL
     conn = Connection(server, LDAP_BIND_DN, LDAP_BIND_PASSWORD, **conn_params)
     if MOCK:
+        if not os.path.exists(MOCK_FILE):
+            os.mknod(MOCK_FILE)
         if conn.search('ou=*', '(objectclass=*)', attributes=ALL_ATTRIBUTES):
             conn.response_to_file(MOCK_FILE, raw=True)
         connection.strategy.entries_from_json(MOCK_FILE)

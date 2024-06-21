@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand, CommandError
 
 from coldfront.core.project.models import Project, ProjectAttribute, ProjectUser
-from coldfront.core.user.models import User, UserAtrribute
+from coldfront.core.user.models import User
 
 from coldfront.core.utils.common import import_from_settings
 
