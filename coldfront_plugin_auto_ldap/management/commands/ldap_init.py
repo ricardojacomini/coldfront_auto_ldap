@@ -5,6 +5,9 @@ from django.core.management.base import BaseCommand, CommandError
 from coldfront.core.project.models import Project, ProjectAttribute, ProjectUser
 from coldfront.core.user.models import User
 
+from ldap3.core.exceptions import LDAPException
+from ldap3 import SUBTREE, BASE, LEVEL
+
 from coldfront.core.utils.common import import_from_settings
 
 OU = import_from_settings("AUTO_LDAP_COLDFRONT_OU")
