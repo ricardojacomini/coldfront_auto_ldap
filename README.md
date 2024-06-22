@@ -8,7 +8,9 @@ pip install git+https://github.com/ricardojacomini/coldfront_auto_ldap.git
 ## Configuration
 Add the following to ColdFront's [local settings](https://coldfront.readthedocs.io/en/latest/config/#configuration-files):
 ```
-INSTALLED_APPS += ["coldfront_plugin_auto_ldap"]
-AUTO_LDAP_COLDFRONT_OU = Coldfront OU
+INSTALLED_APPS += ['coldfront_plugin_auto_ldap',]
+AUTO_LDAP_COLDFRONT_OU="Coldfront"
+AUTO_LDAP_MOCK=False
+AUTO_LDAP_MOCK_FILE="None"
 ```
 The Coldfront OU is the LDAP OU this plugin will use. If not set, it will default to "COLDFRONT"
