@@ -2,6 +2,9 @@ import logging
 import os
 from ldap3 import Server, Connection, Tls, get_config_parameter, set_config_parameter, SASL, ALL, MOCK_ASYNC, ALL_ATTRIBUTES
 
+from ldap3.core.exceptions import LDAPException
+from ldap3 import SUBTREE, BASE, LEVEL
+
 from coldfront.core.utils.common import import_from_settings
 
 logger = logging.getLogger(__name__)
@@ -21,7 +24,7 @@ LDAP_CACERT_FILE = import_from_settings("LDAP_USER_SEARCH_CACERT_FILE", None)
 
 OU = import_from_settings("AUTO_LDAP_COLDFRONT_OU")
 MOCK = import_from_settings("AUTO_LDAP_MOCK") #whether to use a mock server
-MOCK_FILE = import_from_settings("AUTOLDAP_MOCK_FILE") #json file with mock server schema
+MOCK_FILE = import_from_settings("AUTO_LDAP_MOCK_FILE") #json file with mock server schema
 
 # parse a given uri with OU into a format usable in LDAP operations
 def parse_uri(uri=LDAP_SERVER_URI, ou = OU, shortened=False):
